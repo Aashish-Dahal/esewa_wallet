@@ -106,7 +106,7 @@ paymentServiceLive.initiatePayment(
 
 ## Payment Flow
 
-1. The `ESewaPayment` singleton submits payment data to the eSewa API via a WebView.
+1. The `ESewaWallet` submits payment data to the eSewa API via a WebView.
 2. Users are redirected to the eSewa login page to enter their eSewa ID and MPIN.
 3. A 6-digit verification token is sent to the user's mobile (SMS) or email. For testing in the UAT environment, use the token `123456`.
 4. On successful payment, the user is redirected to the `successUrl` with a Base64-encoded response (in the `data` query parameter), which is decoded into an `EsewaResponse`.
@@ -114,7 +114,7 @@ paymentServiceLive.initiatePayment(
 
 ## Dev Credentials
 
-Use the following credentials for testing in the dev (UAT) environment:
+Use the following credentials for testing in the dev environment:
 
 - **eSewa ID**: 9806800001, 9806800002, 9806800003, 9806800004, or 9806800005
 - **MPIN**: 1122
@@ -150,4 +150,4 @@ See the `example/` directory for a complete sample app demonstrating both live a
 
 ## License
 
-MIT
+This plugin is released under the MIT License. See LICENSE for details.
