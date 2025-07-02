@@ -5,8 +5,8 @@ homepage: https://github.com/Aashish-Dahal/esewa_wallet
 issue_tracker: https://github.com/Aashish-Dahal/esewa_wallet/issues
 
 environment:
-  sdk: ^3.8.1
-  flutter: ^3.13.0
+  sdk: "^3.8.1"
+  flutter: ">=3.13.0"
 
 # Add regular dependencies here.
 dependencies:
