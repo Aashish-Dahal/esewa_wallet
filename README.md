@@ -6,11 +6,9 @@ A Flutter package for integrating eSewa payments using `flutter_inappwebview`.
 
 - Seamless integration of eSewa payments for live and dev environments.
 - Automatic HMAC-SHA256 signature generation for secure transactions.
-- Simplified API with hidden `signed_field_names` and `signature` fields.
 - Decodes and processes Base64-encoded success responses.
 - Structured success (`EsewaResponse`) and failure (`EsewaFailure`) callbacks.
 - Adheres to SOLID principles for maintainability and extensibility.
-- Supports eSewa login with verification token (test token: `123456`).
 
 ## Installation
 
@@ -108,7 +106,7 @@ paymentServiceLive.initiatePayment(
 
 1. The `ESewaWallet` submits payment data to the eSewa API via a WebView.
 2. Users are redirected to the eSewa login page to enter their eSewa ID and MPIN.
-3. A 6-digit verification token is sent to the user's mobile (SMS) or email. For testing in the UAT environment, use the token `123456`.
+3. A 6-digit verification token is sent to the user's mobile (SMS) or email. For testing in the dev environment, use the token `123456`.
 4. On successful payment, the user is redirected to the `successUrl` with a Base64-encoded response (in the `data` query parameter), which is decoded into an `EsewaResponse`.
 5. On failure, the user is redirected to the `failureUrl`, and an `EsewaFailure` is returned with an error message.
 
@@ -122,7 +120,7 @@ Use the following credentials for testing in the dev environment:
 
 These credentials allow you to test the payment flow without needing to receive a real token via SMS or email.
 
-## Signature Generation (DEV)
+## Signature Generation
 
 The package automatically generates a Base64-encoded HMAC-SHA256 signature using the fields `total_amount,transaction_uuid,product_code` in that order. Example:
 
