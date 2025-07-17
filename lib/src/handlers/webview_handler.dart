@@ -11,7 +11,8 @@ import 'package:flutter/material.dart'
         State,
         StatefulWidget,
         Text,
-        Widget;
+        Widget,
+        CircularProgressIndicator;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart'
     show
@@ -101,6 +102,7 @@ class _WebViewPage extends StatefulWidget {
 class _WebViewPageState extends State<_WebViewPage> {
   /// Controller for interacting with the InAppWebView instance.
   late final InAppWebViewController webViewController;
+  bool _isPageLoading = true;
 
   /// Builds the WebView UI with an AppBar and payment form.
   @override
@@ -108,69 +110,91 @@ class _WebViewPageState extends State<_WebViewPage> {
     /// Returns a Scaffold with an AppBar and InAppWebView for payment processing.
     return Scaffold(
       /// Displays a title in the AppBar for the payment page.
-      appBar: AppBar(title: const Text('eSewa Payment')),
+      appBar: AppBar(title: const Text('Pay Via Esewa')),
 
       /// Renders the WebView to load the eSewa payment form.
-      body: InAppWebView(
-        /// Sets initial HTML data to auto-submit the payment form.
-        initialData: InAppWebViewInitialData(
-          data: _generateFormHtml(widget.paymentData, widget.actionUrl),
-        ),
+      body: Stack(
+        children: [
+          InAppWebView(
+            /// Sets initial HTML data to auto-submit the payment form.
+            initialData: InAppWebViewInitialData(
+              data: _generateFormHtml(widget.paymentData, widget.actionUrl),
+            ),
 
-        /// Configures WebView settings to enable JavaScript and URL overrides.
-        initialSettings: InAppWebViewSettings(
-          javaScriptEnabled: true,
-          useShouldOverrideUrlLoading: true,
-        ),
+            /// Configures WebView settings to enable JavaScript and URL overrides.
+            initialSettings: InAppWebViewSettings(
+              javaScriptEnabled: true,
+              useShouldOverrideUrlLoading: true,
+            ),
 
-        /// Assigns the WebView controller when the WebView is created.
-        onWebViewCreated: (controller) {
-          webViewController = controller;
-        },
+            onLoadStart: (controller, url) {
+              setState(() {
+                _isPageLoading = true;
+              });
+            },
+            onLoadStop: (controller, url) {
+              setState(() {
+                _isPageLoading = false;
+              });
+            },
 
-        /// Handles URL navigation to detect success or failure redirects.
-        shouldOverrideUrlLoading: (controller, navigationAction) async {
-          /// Extracts the URL from the navigation action.
-          final url = navigationAction.request.url.toString();
+            /// Assigns the WebView controller when the WebView is created.
+            onWebViewCreated: (controller) {
+              webViewController = controller;
 
-          /// Checks if the URL indicates a successful payment.
-          if (url.contains('success')) {
-            /// Closes the WebView page.
-            Navigator.pop(context);
+              setState(() {
+                _isPageLoading = false;
+              });
+            },
 
-            /// Decodes the Base64-encoded response from the success URL.
-            final responseData = SignatureGenerator.decodeSuccessResponse(url);
+            /// Handles URL navigation to detect success or failure redirects.
+            shouldOverrideUrlLoading: (controller, navigationAction) async {
+              /// Extracts the URL from the navigation action.
+              final url = navigationAction.request.url.toString();
 
-            /// Logs the response data for debugging in production.
-            debugPrint('Response Data: ${responseData?.toJson()}');
+              /// Checks if the URL indicates a successful payment.
+              if (url.contains('success')) {
+                /// Closes the WebView page.
+                Navigator.pop(context);
 
-            /// Verifies the response status and signature.
-            if (responseData != null && responseData.status == "COMPLETE") {
-              /// Triggers the success callback with the decoded response.
-              widget.onSuccess(responseData);
-            } else {
-              /// Triggers the failure callback for invalid responses.
-              widget.onFailure(
-                EsewaFailure(error: 'Invalid response signature'),
-              );
-            }
+                /// Decodes the Base64-encoded response from the success URL.
+                final responseData = SignatureGenerator.decodeSuccessResponse(
+                  url,
+                );
 
-            /// Cancels further navigation after handling success.
-            return NavigationActionPolicy.CANCEL;
-          } else if (url.contains('failure')) {
-            /// Closes the WebView page on failure.
-            Navigator.pop(context);
+                /// Logs the response data for debugging in production.
+                debugPrint('Response Data: ${responseData?.toJson()}');
 
-            /// Triggers the failure callback with a generic error message.
-            widget.onFailure(EsewaFailure(error: 'Payment failed'));
+                /// Verifies the response status and signature.
+                if (responseData != null && responseData.status == "COMPLETE") {
+                  /// Triggers the success callback with the decoded response.
+                  widget.onSuccess(responseData);
+                } else {
+                  /// Triggers the failure callback for invalid responses.
+                  widget.onFailure(
+                    EsewaFailure(error: 'Invalid response signature'),
+                  );
+                }
 
-            /// Cancels further navigation after handling failure.
-            return NavigationActionPolicy.CANCEL;
-          }
+                /// Cancels further navigation after handling success.
+                return NavigationActionPolicy.CANCEL;
+              } else if (url.contains('failure')) {
+                /// Closes the WebView page on failure.
+                Navigator.pop(context);
 
-          /// Allows other URLs (e.g., login page) to load normally.
-          return NavigationActionPolicy.ALLOW;
-        },
+                /// Triggers the failure callback with a generic error message.
+                widget.onFailure(EsewaFailure(error: 'Payment failed'));
+
+                /// Cancels further navigation after handling failure.
+                return NavigationActionPolicy.CANCEL;
+              }
+
+              /// Allows other URLs (e.g., login page) to load normally.
+              return NavigationActionPolicy.ALLOW;
+            },
+          ),
+          if (_isPageLoading) Center(child: const CircularProgressIndicator()),
+        ],
       ),
     );
   }
