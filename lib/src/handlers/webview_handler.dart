@@ -5,22 +5,23 @@ import 'package:flutter/material.dart'
     show
         AppBar,
         BuildContext,
+        LinearProgressIndicator,
         MaterialPageRoute,
         Navigator,
         Scaffold,
         State,
         StatefulWidget,
         Text,
-        Widget,
-        CircularProgressIndicator;
+        Theme,
+        Widget;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart'
     show
         InAppWebView,
         InAppWebViewController,
         InAppWebViewInitialData,
-        NavigationActionPolicy,
-        InAppWebViewSettings;
+        InAppWebViewSettings,
+        NavigationActionPolicy;
 
 /// Defines an abstract interface for handling WebView-based payment form loading.
 abstract class WebViewHandler {
@@ -37,6 +38,8 @@ abstract class WebViewHandler {
     String actionUrl, {
     required Function(EsewaResponse) onSuccess,
     required Function(EsewaFailure) onFailure,
+    PreferredSizeWidget? appBar,
+    Color? progressBarColor,
   });
 }
 
@@ -53,6 +56,8 @@ class InAppWebViewHandler implements WebViewHandler {
     String actionUrl, {
     required Function(EsewaResponse) onSuccess,
     required Function(EsewaFailure) onFailure,
+    PreferredSizeWidget? appBar,
+    Color? progressBarColor,
   }) {
     /// Pushes a new route to display the WebView page for payment processing.
     Navigator.push(
@@ -64,6 +69,8 @@ class InAppWebViewHandler implements WebViewHandler {
           actionUrl: actionUrl,
           onSuccess: onSuccess,
           onFailure: onFailure,
+          appBar: appBar,
+          progressBarColor: progressBarColor,
         ),
       ),
     );
@@ -77,6 +84,7 @@ class _WebViewPage extends StatefulWidget {
   final Map<String, String> paymentData;
 
   /// The eSewa API endpoint (live or dev) for form submission.
+  /// The eSewa API endpoint (live or dev) for form submission.
   final String actionUrl;
 
   /// Callback triggered on successful payment with the decoded response.
@@ -85,12 +93,20 @@ class _WebViewPage extends StatefulWidget {
   /// Callback triggered on payment failure or invalid response.
   final Function(EsewaFailure) onFailure;
 
+  /// Optional AppBar widget.
+  final PreferredSizeWidget? appBar;
+
+  /// Optional Progress bar color.
+  final Color? progressBarColor;
+
   /// Constructor for [_WebViewPage] with required payment data and callbacks.
   const _WebViewPage({
     required this.paymentData,
     required this.actionUrl,
     required this.onSuccess,
     required this.onFailure,
+    this.appBar,
+    this.progressBarColor,
   });
 
   /// Creates the state for this widget.
@@ -102,7 +118,8 @@ class _WebViewPage extends StatefulWidget {
 class _WebViewPageState extends State<_WebViewPage> {
   /// Controller for interacting with the InAppWebView instance.
   late final InAppWebViewController webViewController;
-  bool _isPageLoading = true;
+
+  double progress = 0;
 
   /// Builds the WebView UI with an AppBar and payment form.
   @override
@@ -110,7 +127,7 @@ class _WebViewPageState extends State<_WebViewPage> {
     /// Returns a Scaffold with an AppBar and InAppWebView for payment processing.
     return Scaffold(
       /// Displays a title in the AppBar for the payment page.
-      appBar: AppBar(title: const Text('Pay Via Esewa')),
+      appBar: widget.appBar ?? AppBar(title: const Text('Pay Via Esewa')),
 
       /// Renders the WebView to load the eSewa payment form.
       body: Stack(
@@ -127,23 +144,21 @@ class _WebViewPageState extends State<_WebViewPage> {
               useShouldOverrideUrlLoading: true,
             ),
 
-            onLoadStart: (controller, url) {
-              setState(() {
-                _isPageLoading = true;
-              });
-            },
             onLoadStop: (controller, url) {
-              setState(() {
-                _isPageLoading = false;
-              });
+              // Only stop loading if it's not the initial data load
+              // or if it's a real URL (not about:blank or data:...)
+              if (url != null &&
+                  !url.toString().startsWith('data:') &&
+                  url.toString() != 'about:blank') {}
             },
 
             /// Assigns the WebView controller when the WebView is created.
             onWebViewCreated: (controller) {
               webViewController = controller;
-
+            },
+            onProgressChanged: (controller, progress) {
               setState(() {
-                _isPageLoading = false;
+                this.progress = progress / 100; // Update progress value
               });
             },
 
@@ -193,7 +208,16 @@ class _WebViewPageState extends State<_WebViewPage> {
               return NavigationActionPolicy.ALLOW;
             },
           ),
-          if (_isPageLoading) Center(child: const CircularProgressIndicator()),
+          if (progress < 1.0)
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor:
+                  widget.progressBarColor ?? Theme.of(context).primaryColor,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                widget.progressBarColor ??
+                    Theme.of(context).primaryColor.withValues(alpha: .3),
+              ),
+            ),
         ],
       ),
     );

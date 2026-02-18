@@ -8,7 +8,8 @@ import 'package:esewa_wallet/esewa_wallet.dart'
 import 'package:esewa_wallet/src/models/esewa_failure.dart';
 import 'package:esewa_wallet/src/models/esewa_response.dart';
 import 'package:esewa_wallet/src/utils/constant.dart' show ESewaEnvironment;
-import 'package:flutter/material.dart' show BuildContext;
+import 'package:flutter/material.dart'
+    show BuildContext, PreferredSizeWidget, Color;
 
 /// The main class for initiating eSewa payments, implemented as a singleton.
 class ESewaPayment {
@@ -65,6 +66,8 @@ class ESewaPayment {
     BuildContext context, {
     required Function(EsewaResponse) onSuccess,
     required Function(EsewaFailure) onFailure,
+    PreferredSizeWidget? appBar,
+    Color? progressBarColor,
   }) {
     /// Retrieves payment data from the configuration for form submission.
     final paymentData = config.getPaymentData();
@@ -79,6 +82,8 @@ class ESewaPayment {
       actionUrl,
       onSuccess: onSuccess,
       onFailure: onFailure,
+      appBar: appBar,
+      progressBarColor: progressBarColor,
     );
   }
 }

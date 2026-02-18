@@ -27,7 +27,7 @@ class PaymentHomePage extends StatelessWidget {
       amount: '100',
       taxAmount: '10',
       totalAmount: '110',
-      transactionUuid: '1111-111-116',
+      transactionUuid: UniqueKey().toString(),
       productCode: 'EPAYTEST',
       productServiceCharge: '0',
       productDeliveryCharge: '0',

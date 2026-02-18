@@ -57,6 +57,13 @@ final paymentData = PaymentData(
 final paymentService = ESewaPayment.dev(paymentData: paymentData);
 paymentService.initiatePayment(
   context,
+  // Optional: Custom AppBar
+  appBar: AppBar(
+    title: const Text('eSewa Checkout'),
+    backgroundColor: Colors.green,
+  ),
+    // Optional: Progress bar color
+  progressBarColor: Colors.red,
   onSuccess: (response) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
