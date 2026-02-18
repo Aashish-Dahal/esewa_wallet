@@ -1,4 +1,4 @@
-## 1.0.1
+## 1.0.2
 
-- Added Loading indicator
-- fixed import bug issue
+- Added Progress bar indicator
+- Custom App Bar and progress bar color
